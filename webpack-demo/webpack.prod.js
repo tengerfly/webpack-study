@@ -7,7 +7,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin'); // 将css抽离
 const HtmlWebpackPlugin = require('html-webpack-plugin'); // 压缩html 自动注入css和js
 const { CleanWebpackPlugin } = require('clean-webpack-plugin'); // 清理构建产物  // 注意这里的导出
 const HtmlWebpackExternalsPlugin = require('html-webpack-externals-plugin');
-
+const FriendlyErrorWebpackPlugin = require('friendly-errors-webpack-plugin')
 const setMPA = () => {
   const entry = {};
   const htmlWebpackPlugins = [];
@@ -61,6 +61,7 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: '[name]-[contenthash:8].css',
     }),
+    new FriendlyErrorWebpackPlugin(),
     // new OptimizeCSSAssetsPlugin({ // 在webpack5中报错
     //   assetNameRegExp:/\.css$/g,
     //   cssProcessor:require('cssnano')
@@ -215,4 +216,7 @@ module.exports = {
   // sourcemap
   // devtool: 'eval' // 将sourcemap打包到js中
   // devtool: 'source-map' // 将sourcemap单独生产文件
+  // 设置stats
+  satas: 'errors-only'
+  
 };

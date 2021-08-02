@@ -3,7 +3,7 @@
 const path = require('path')
 const webpack = require('webpack')
 // const HotModuleReplacementPlugin = webpack.HotModuleReplacementPlugin()
-
+const FriendlyErrorWebpackPlugin = require('friendly-errors-webpack-plugin')
 module.exports = {
   // 单入口
   // entry: './src/index.js',
@@ -20,7 +20,8 @@ module.exports = {
   // mode: 'production',
   mode: "development",
   plugins: [
-    new webpack.HotModuleReplacementPlugin()
+    new webpack.HotModuleReplacementPlugin(),
+    new FriendlyErrorWebpackPlugin()
   ],
   devServer: {
     // 基础目录

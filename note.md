@@ -1193,5 +1193,57 @@ webpack ssr打包存在的问题
 
 首屏数据如何处理？
 
-服务端获取数据(用占位符，数据放在script上)
+服务端获取数据(用占位符，数据放在script上绑定在window上)
 替换占位符
+
+## 优化构建时命令行的显示日志
+
+**统计信息stats**
+
+用来输出统计信息，用来分析构建速度，构建体积等。
+
+
+|  Preset   | Alternative  | Description |
+|  ----  | ----  |
+| "errors-only"  | none | 只在发生错误时输出 |
+| "minimal"  | none | 只在发生错误或有新的编译时输出 |
+| "none"  | false | 没有输出 |
+| "normal"  | true | 标准输出 |
+| "verbose"  | node | 全部输出 |
+
+可以在webpack配置文件中设置
+```js
+  stats:"errors-only"
+```
+可以使用 `friendly-errors-webpack-plugin` 
+
+stats设置成errors-only
+
+- success: 构建成功的日志提示
+- warning：构建警告的日志提示
+- error：构建报错的日志提示
+
+## 构建异常和中断处理
+
+如何判断构建是否成功
+
+在CI/CD的`pipline`或者发布系统需要知道当前构建状态
+
+每次构建完成后输入`echo $?` 获取错误码
+
+webpack4之前的版本构建失败不会抛出错误码，webpack4会
+
+Node.js中的process.exit规范
+
+- 0 表示成功完成, 回调函数中，err为null
+
+- 非0表示执行失败，回调函数中，err不为null, err.code 就是传给exit的数字
+
+
+如何主动捕获并处理构建错误
+
+compiler在每次构建结束后会触发done这个hook
+
+process.exit 主动处理构建报错
+
+
