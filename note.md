@@ -902,7 +902,7 @@ cheap: 不包含列信息
 inline: 将.map作为DataURI嵌入，不单独生产.map文件
 module: 包含loader的sourcemap
 
-[sourcemap类型](./static/sourcemap-type.jpg)
+![sourcemap类型](./static/sourcemap-type.jpg)
 
 
 ## 提取页面公共资源
@@ -913,7 +913,7 @@ module: 包含loader的sourcemap
 
 - 方法： 使用html-webpack-externals-plugin
 
-[基础库分离](./static/cdn-react.jpg)
+![基础库分离](./static/cdn-react.jpg)
 
 ```js
 module.exports = {
@@ -1055,7 +1055,7 @@ new HtmlWebpackPlugin({
 大量函数闭包包括代码，导致体积增大(模块越多越明显)
 运行代码时创建的函数作用域变多，内存开销变大
 
-[模块转换分析](./static/module-translate.jpg)
+![模块转换分析](./static/module-translate.jpg)
 
 模块转换的原因还是因为兼容性
 
@@ -1126,7 +1126,7 @@ npm i @babel/plugin-syntax-dynamic-import -D
 
 有jslint，比较常用的是eslint
 
-[团队指定规范](./static/eslint.jpg)
+![团队指定规范](./static/eslint.jpg)
 
 ESLint 如何执行落地
 
@@ -1154,7 +1154,7 @@ webpack除了可以用来打包应用，也可以用来打包js库
 内网机器拉取数据更快
 一个HTML返回所有数据
 
-[服务端渲染和客户端渲染的对比]('./static/ssr-1.jpg')
+![服务端渲染和客户端渲染的对比]('./static/ssr-1.jpg')
 
 服务端渲染的核心是减少请求
 
@@ -1246,4 +1246,94 @@ compiler在每次构建结束后会触发done这个hook
 
 process.exit 主动处理构建报错
 
+# 编写可维护的webpack构建配置
+
+## 构建配置包设计
+
+构建配置抽离成npm包的意义
+
+**通用性**
+
+- 业务开发者无需关注构建配置
+- 统一团队构建脚本
+
+**可维护性**
+
+- 构建配置合理的拆分
+- README文档，ChangeLog文档等
+
+**质量**
+
+- 冒烟测试、单元测试、测试覆盖率
+- 持续集成
+
+构建配置管理的可选方案
+
+- 通过多个配置文件管理不同环境的构建，webpack --config参数进行控制
+- 将构建配置设计成一个库，比如：hjs-webpack,Neutrino, webpack-blocks
+- 抽成一个工具进行管理，比如：create-react-app, kyt, nwb
+- 将所有的配置放在一个文件，通过--env参数控制分支选择
+
+**构建配置包设计**
+
+通过多个配置文件管理不同环境的webpack配置
+
+- 基础配置：webpack.base.js
+- 开发环境：webpack.dev.js
+- 生产环境：webpack.prod.js
+- SSR环境： webpack.ssr.js
+
+抽离成一个npm包统一管理
+
+- 规范： Git commit 日志、README、ESLint规范、Semver规范
+- 质量： 冒烟测试、单元测试、测试覆盖率和CI
+
+**通过webpack-merge组合配置**
+
+```js
+const merge = require('webpack-merge')
+```
+合并配置
+
+```js
+module.exports = merge(baseConfig,devConfig)
+```
+
+## 功能模块设计和目录结构
+
+**功能模块设计**
+
+![功能模块设计](./static/function-module.jpg)
+
+具体查看webpack
+
+## 使用ESlint构建脚本
+
+```sh
+npm i eslint-config-airbnb-base -D
+```
+
+`eslint-config-airbnb-base` 更适合构建包脚本的检查，包含cjs的语法
+
+## 冒烟测试 (smoke testing)
+
+冒烟测试是指提交测试的软件在进行详细深入的测试之前而进行的预测试，这种预测试的主要目的是暴露导致软件需要重新发布的基本功能失效等严重问题。
+
+
+### 冒烟测试执行
+
+- 构建是否成功
+- 每次构建完成build目录是否有内容输出
+  是否有js、css等静态资源文件
+  是否有HTML文件
+
+**判断构建是否成功**
+
+![判断构建是否成功](./static/build-success.jpg)
+
+**判断基本功能是否正常**
+
+利用mocha工具编写测试用例
+
+![判断基本功能是否正常](./static/build-functional.jpg)
 
