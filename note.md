@@ -1373,4 +1373,4 @@ stats可以分析出每个包的大小构建速度、体积等。
 
 ### 方案三： 使用 terser-webpack-plugin 开始parallel参数， 官方推荐
 
-
+                                                                                                                                                                                                                                                                                                                                                                                                        
