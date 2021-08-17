@@ -1337,3 +1337,40 @@ npm i eslint-config-airbnb-base -D
 
 ![判断基本功能是否正常](./static/build-functional.jpg)
 
+# webpack 构建速度和体积优化策略
+
+## 初级分析： 使用webpack内置的stats
+
+stats可以分析出每个包的大小构建速度、体积等。
+
+通常用的优化插件都是根据stats来分析优化的
+
+## 速度分析： 使用speed-measure-webpack-plugin
+
+## 体积分析： 使用webpack-bundle-analyzer
+
+## 使用高版本的webpack和Node.js
+
+高版本的webpack和node.js 具有更好的性能，从而能在一定程度上进一步提升构建速度
+
+## 多进程/多实例构建
+
+之前用的是`HappyPack`, `parallel-webpack`。HappyPack 作者不维护了。
+
+官方推荐使用 `thread-loader`
+
+原理：
+
+每次webpack 解析一个模块，thread-loader会将它及它的依赖分配给worker线程中。
+
+## 多进程并行压缩
+
+主要是压缩js代码
+
+### 方案一：使用parallel-uglify-webpack插件
+
+### 方案二： 使用uglifyjs-webpack-plugin开启parallel参数
+
+### 方案三： 使用 terser-webpack-plugin 开始parallel参数， 官方推荐
+
+
