@@ -1373,4 +1373,131 @@ stats可以分析出每个包的大小构建速度、体积等。
 
 ### 方案三： 使用 terser-webpack-plugin 开始parallel参数， 官方推荐
 
-                                                                                                                                                                                                                                                                                                                                                                                                        
+## 进一步分包：预编译资源模块
+
+## 充分利用缓存提升二次构建速度
+
+## 缩小构建目标
+
+## 使用Tree Shaking擦除无用的JS和css
+
+## 使用webpack进行图片压缩
+
+## 使用动态Polyfill服务
+
+# 通过源码掌握打包原理
+
+webpack4将webpack和webpack-cli分包
+
+webpack-cli的主要功能是分析命令行，生成options 交给webpack打包。
+
+webpack中比较重要的两个类 `Compiler` 和 `Compilation` 都继承自 `Tapable`。
+
+webpack可以将其理解为一种基于事件流的编程范例，一系列的插件运行。
+
+## Tapable
+
+`Tapable` 是一个类似于Node.js的EventEmitter的库，主要是控制钩子函数的发布和订阅，控制着webpack的插件系统。
+
+`Tapable` 库暴露了很多Hook类，为插件提供挂载的钩子
+
+![tapable-hook](./static/tabable-hook.jpg)
+
+tapable 是如何和webpack联系起来的
+
+`complier`类继承自`tapable`，webpack在获取到`options`之后，去获取`options`里边的`plugins`。
+`plugin`会带有一个apply方法，apply方法接受一个参数是complier
+
+```js
+plugin.apply(complier)
+```
+
+结论：
+
+- 插件必须有一个apply方法，该方法接受一个参数是complier
+- 插件做一些事件的监听，监听complier上的hooks，一旦事件触发，就会执行对应的操作
+
+## webpack 构建流程
+
+![webpack构建流程](./stctic/webpack-build-progress.jpg)
+
+构建流程：
+
+- entry-option:            初始化option
+- run                      执行webpack.run() 开始打包
+- make                     从entry开始递归分析依赖，对每个依赖模块进行build
+- before-resolve           对模块位置进行解析
+- build-module             开始构建某个模块
+- normal-module-loader     将loader加载完成的module进行编译，生成AST树
+- program                  遍历AST，当遇到require等一些调用表达式的时候，收集依赖
+- seal                     所有依赖build完成，开始优化
+- emit                     输出到dist目录
+
+`Complier` 上主要是webpack流程相关和监听相关的钩子函数
+`Compilation` 主要是模块编译打包优化的钩子函数
+
+`webpackOptionApply`: 将所有的配置`options` 参数转换成webpack内部插件。
+
+一些使用内置的插件列表：
+
+- output.library  ->  LibraryTemplatePlugin
+- externals       ->  ExternalsPlugin
+- devtool:        ->  EvalDevtoolModulePlugin, SourceMapDevToolPlugin
+- RemoveEmptyChunksPlugin
+
+## webpack打包机制
+
+```js
+(function(modules) {
+  var installedModules = {};
+  
+  function __webpack_require__(moduleId) {
+    if(installedModules[moduleId])
+      return installedModules[moduleId].exports
+    var module = installedModules[moduleId] = {
+      i: moduleId,
+      l: false,
+      exports: {}
+    }
+
+    modules[moduleId].call(module.exports, module, module.exports, __webpack_require__)
+
+    module.l = true
+
+    return module.exports;
+  }
+  __webpack_require__(0)
+})([
+  /** 0 module **/ 
+  (function(module, __webpack_exports__, __webpack_require__){
+    // ...
+  }),
+   /** 1 module **/ 
+  (function(module, __webpack_exports__, __webpack_require__){
+    // ...
+  }),
+   /** 2 module **/ 
+  (function(module, __webpack_exports__, __webpack_require__){
+    // ...
+  })
+])
+
+```
+
+- 打包出来的是一个IIFE(匿名闭包)
+- modules是一个数组，每一项是一个模块初始化函数
+- __webpack_require__ 用来加载模块，返回module.exports
+- 通过WEBPACK_REQUIRE_METHOD(0)启动程序
+
+
+## 实现一个webpack
+
+- 将ES6语法转成ES5的语法
+  - 通过babylon生产AST
+  - 通过babel-core将AST重新生成代码
+  
+- 可以分析模块之间的依赖关系
+  - 通过babel-traverse 的ImportDeclaration方法获取依赖属性
+
+- 生产的js文件可以在浏览器中运行
+
