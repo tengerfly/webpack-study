@@ -1501,3 +1501,208 @@ plugin.apply(complier)
 
 - 生产的js文件可以在浏览器中运行
 
+# 编写loader和插件
+
+loader 的执行顺序是从右到左。
+
+loader的定义：
+
+`一个导出为函数的JavaScript模块`
+
+```js
+module.exports = function(source) {
+  return source
+}
+```
+
+多个loader串行执行，顺序从后到前。
+
+>上一个loader执行之后，将结果返回，下一个loader接受上一个loader的执行结果，继续执行
+
+为什么是从后往前？
+
+函数组合的两种情况：
+
+- Unix中的 pipline
+- Compose (webpack采取是这种) 
+
+# loader-runner
+
+`loader-runner` 允许你在不安装webpack的情况下运行loaders
+
+提供了loader的独立运行环境
+
+作用：
+
+- 作为webpack的依赖，webpack中使用它执行loader
+- 进行loader的开发和调试
+
+```js
+
+import { runLoaders } from 'loader-runner'
+
+runLoaders({
+  resource: '', // 绝对路径
+  loaders: [], // loader数组
+  context: { minimize: true }, // 定义上下文
+  readResource: fs.readFile.bind(fs) // 定义获取文件的方式
+}, function(err, result) {
+
+})
+
+```
+
+## 更复杂的loader开发场景
+
+获取参数
+
+通过`loader-utils` 的`getOptions` 方法获取
+
+```js
+const loaderUtils = require('loader-utils')
+module.exports = function(content) {
+  const { name } = loaderUtils.getOptions(this)
+}
+
+```
+
+### 异常处理
+
+同步的loader:
+
+- loader内直接通过throw抛出
+- 通过this.callback 传递错误
+
+```js
+this.callback(
+  err: Error | null,
+  content: string | Buffer,
+  sourceMap?: SourceMap,
+  meta?: any 
+)
+```
+
+### 异步loader
+
+通过`this.async` 来返回一个异步函数
+
+第一个参数是Error，第二个参数是返回的结果
+
+
+### 缓存
+
+在loader中使用缓存
+
+webpack中默认开启loader缓存
+- 可以使用`this.cacheable(false)` 关掉缓存
+
+缓存条件：loader的结果在相同的输入下有确定的输出
+- 有依赖的loader无法使用缓存
+
+
+### loader如何输出文件
+
+通过`this.emitFile` 进行文件写入
+
+```js
+
+const loaderUtils = require("loader-utils")
+
+module.exports = function(content) {
+  const url = loaderUtils.interpolateName(this,"[hash].[ext]", {
+    content
+  })
+
+  this.emitFile(url, content)
+
+  const path = `__webpack_public_path__${JSON.stringify(url)}`
+
+  return `export default ${path}`
+}
+
+```
+
+
+## 插件的基本结构
+
+插件没有像loader那样独立的运行环境 只能在webpack环境里边运行
+
+插件的基本结构
+
+```js
+// 1. 插件名称
+class MyPlugin{
+  // 2.apply 方法
+  apply(compiler) {
+    // 3.插件的hooks
+    compiler.hooks.done.tap('My Plugin', ()=> {
+      // 4.逻辑操作
+    })
+  }
+}
+
+module.exports = MyPlugin
+
+```
+
+搭建插件的运行环境
+
+```js
+
+const path = require('path')
+const DemoPlugin = require('./plugins/demo-plugin.js')
+
+const PATHS = {
+  lib: path.join(__dirname, 'app', 'shake.js'),
+  build: path.join(__dirname, 'build')
+}
+
+module.exports = {
+  entry: {
+    lib: PATHS.lib
+  },
+  output: {
+    path: PATHS.build,
+    filename: "[name].js"
+  },
+  plugins: [new DemoPlugin()]
+}
+
+```
+
+获取参数
+
+通过方法的options
+
+错误处理
+
+- 参数校验阶段可以直接throw的方式抛出
+
+```js
+  throw new Error('Error Message')
+```
+- 通过compilation对象的warnings和errors接受
+
+```js
+compilation.warnings.push("warning")
+compilation.errors.push("error")
+```
+
+文件写入
+
+- 监听`compiler` 的 `emit` hooks
+- Compilation上的assets可以用于文件写入(可以将zip资源包设置到compilation.assets对象上)
+- 使用webpack-source写入文件
+
+
+插件扩展插件
+
+![插件扩展插件](./static/html-webpack-hook.jpg)
+
+## 自己编写一个插件
+
+要求：
+
+- 生产的zip包文件名称可以通过插件传入
+- 需要使用compiler对象上的特定hooks进行资源的生成
+
