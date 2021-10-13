@@ -16,12 +16,17 @@ webpack --config dev.js
 ```
 
 配置组成：
+
 webpack4
-entry     打包的入口文件   默认 ./src/index.js 
-output    打包的输出       默认 ./dist/main.js
-mode      环境
-module    loader配置
-plugins   插件配置
+
+名称 | 作用| 其他
+---|--- | ---
+entry | 打包的入口文件 | 默认 ./src/index.js 
+output | 打包的输出 | 默认 ./dist/main.js
+mode | 环境 | 默认 |
+module | loader配置 | 
+plugins | 插件配置 | 
+
 
 
 ## webpack安装
